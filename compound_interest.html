@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compound Interest Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e222d;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0ede8;
+    --muted: #7a7d87;
+    --accent: #4ade9b;
+    --accent2: #3b82f6;
+    --gold: #f5c842;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 860px;
+  }
+
+  header {
+    margin-bottom: 2.5rem;
+  }
+
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 400;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    margin-top: 0.75rem;
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 300;
+    max-width: 480px;
+    line-height: 1.6;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  @media (max-width: 680px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+
+  .panel-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .control + .control { margin-top: 1.4rem; }
+
+  .ctrl-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+
+  .ctrl-name {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .ctrl-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 3px;
+    background: var(--surface2);
+    border-radius: 99px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--accent);
+    transition: transform 0.1s;
+  }
+
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  input[type=range]::-webkit-slider-runnable-track { border-radius: 99px; }
+
+  .right-col { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+  }
+
+  .metric-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+    margin-bottom: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  .metric-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .metric-value.big { font-size: 24px; color: var(--accent); }
+
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 1rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .canvas-outer {
+    position: relative;
+    width: 100%;
+    height: 220px;
+  }
+
+  .rule {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1rem 0;
+  }
+
+  .insight {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  .insight strong {
+    color: var(--accent);
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  footer {
+    margin-top: 2rem;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="eyebrow">Interactive Calculator</div>
+    <h1>The power of <em>compound interest</em></h1>
+    <p class="subtitle">Adjust the sliders to see how time, rate, and contributions shape your wealth.</p>
+  </header>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="panel-label">Parameters</div>
+
+      <div class="control">
+        <div class="ctrl-header">
+          <span class="ctrl-name">Initial investment</span>
+          <span class="ctrl-val" id="pv-out">$10,000</span>
+        </div>
+        <input type="range" id="pv" min="1000" max="100000" step="1000" value="10000">
+      </div>
+
+      <div class="control">
+        <div class="ctrl-header">
+          <span class="ctrl-name">Monthly contribution</span>
+          <span class="ctrl-val" id="contrib-out">$200</span>
+        </div>
+        <input type="range" id="contrib" min="0" max="2000" step="50" value="200">
+      </div>
+
+      <div class="control">
+        <div class="ctrl-header">
+          <span class="ctrl-name">Annual return</span>
+          <span class="ctrl-val" id="rate-out">7%</span>
+        </div>
+        <input type="range" id="rate" min="1" max="20" step="1" value="7">
+      </div>
+
+      <div class="control">
+        <div class="ctrl-header">
+          <span class="ctrl-name">Time horizon</span>
+          <span class="ctrl-val" id="years-out">20 yrs</span>
+        </div>
+        <input type="range" id="years" min="1" max="50" step="1" value="20">
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Final value</div>
+          <div class="metric-value big" id="final-val">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Total contributed</div>
+          <div class="metric-value" id="total-in">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Interest earned</div>
+          <div class="metric-value" id="interest-out">—</div>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#4ade9b;"></div>Interest growth</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#2d3349;"></div>Amount contributed</div>
+        </div>
+        <div class="canvas-outer">
+          <canvas id="chart"></canvas>
+        </div>
+        <hr class="rule">
+        <p class="insight" id="insight"></p>
+      </div>
+    </div>
+  </div>
+
+  <footer>Use arrow keys on sliders for fine control &nbsp;·&nbsp; Assumes annual compounding</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  const fmt = v => '$' + Math.round(v).toLocaleString();
+  const pct = (a, b) => Math.round((a / b) * 100);
+
+  function calcSeries(pv, rate, years, contrib) {
+    const r = rate / 100;
+    const labels = [], totals = [], contribs = [];
+    for (let y = 0; y <= years; y++) {
+      const months = y * 12;
+      const mr = r / 12;
+      const fv = pv * Math.pow(1 + r, y) + (mr > 0 ? contrib * ((Math.pow(1 + mr, months) - 1) / mr) : contrib * months);
+      const invested = pv + contrib * months;
+      labels.push(y === 0 ? 'Now' : 'Yr ' + y);
+      totals.push(Math.round(fv));
+      contribs.push(Math.round(invested));
+    }
+    return { labels, totals, contribs };
+  }
+
+  const ctx = document.getElementById('chart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: [
+        { label: 'Contributed', data: [], backgroundColor: '#2d3349', stack: 's' },
+        { label: 'Interest', data: [], backgroundColor: '#4ade9b', stack: 's' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 250 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1e222d',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#f0ede8',
+          bodyColor: '#7a7d87',
+          callbacks: {
+            title: c => c[0].label,
+            label: c => ' ' + c.dataset.label + ': ' + fmt(c.raw)
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          grid: { display: false },
+          border: { display: false },
+          ticks: { color: '#7a7d87', font: { size: 11, family: 'DM Mono' }, maxTicksLimit: 11, autoSkip: true }
+        },
+        y: {
+          stacked: true,
+          border: { display: false },
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: {
+            color: '#7a7d87',
+            font: { size: 11, family: 'DM Mono' },
+            callback: v => v >= 1000000 ? '$' + (v/1000000).toFixed(1) + 'M' : v >= 1000 ? '$' + (v/1000).toFixed(0) + 'k' : '$' + v
+          }
+        }
+      }
+    }
+  });
+
+  function update() {
+    const pv = +document.getElementById('pv').value;
+    const contrib = +document.getElementById('contrib').value;
+    const rate = +document.getElementById('rate').value;
+    const years = +document.getElementById('years').value;
+
+    document.getElementById('pv-out').textContent = fmt(pv);
+    document.getElementById('contrib-out').textContent = fmt(contrib) + '/mo';
+    document.getElementById('rate-out').textContent = rate + '%';
+    document.getElementById('years-out').textContent = years + ' yrs';
+
+    const { labels, totals, contribs } = calcSeries(pv, rate, years, contrib);
+    const final = totals[totals.length - 1];
+    const invested = contribs[contribs.length - 1];
+    const interest = final - invested;
+    const ratio = pct(interest, final);
+
+    document.getElementById('final-val').textContent = fmt(final);
+    document.getElementById('total-in').textContent = fmt(invested);
+    document.getElementById('interest-out').textContent = fmt(interest);
+
+    const multiplier = (final / invested).toFixed(1);
+    document.getElementById('insight').innerHTML =
+      `<strong>${ratio}%</strong> of your final balance is pure interest — your money grew to <strong>${multiplier}×</strong> what you put in over ${years} years.`;
+
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = contribs;
+    chart.data.datasets[1].data = totals.map((t, i) => Math.max(0, t - contribs[i]));
+    chart.update('none');
+  }
+
+  ['pv','contrib','rate','years'].forEach(id => document.getElementById(id).addEventListener('input', update));
+  update();
+</script>
+</body>
+</html>
